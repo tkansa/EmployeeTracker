@@ -3,6 +3,7 @@ package com.tiiakansa.employeetracker.controllers;
 import com.tiiakansa.employeetracker.EmployeeNotFoundException;
 import com.tiiakansa.employeetracker.models.*;
 import com.tiiakansa.employeetracker.repositories.EmployeeRepository;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.http.HttpStatus;
@@ -54,8 +55,22 @@ public class EmployeeController {
         return repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
     }
 
+    // Create a Perficient employee
+    @PostMapping("/employee")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Employee create(@RequestBody Employee employee){
+        // need to manually add in IDs for the skills
+        // TODO is there a better way to accomplish this?
+        for (Skill skill: employee.getSkills()) {
+            skill.setId(new ObjectId().toString());
+        }
+        repo.insert(employee);
+        return employee;
+    }
 
-    // Delete a Perficient employee
+    // Update a Perficient Employee by ID
+
+    // Delete a Perficient employee by ID
     @DeleteMapping("/employee/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id){
