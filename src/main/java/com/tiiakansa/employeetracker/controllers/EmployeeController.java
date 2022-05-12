@@ -58,7 +58,7 @@ public class EmployeeController {
     // Delete a Perficient employee
     @DeleteMapping("/employee/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable("id") String id){
+    public void delete(@PathVariable String id){
         // TODO what if ID doesn't exist - test this
         repo.deleteById(id);
     }
