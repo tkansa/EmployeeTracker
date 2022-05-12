@@ -99,14 +99,41 @@ public class EmployeeController {
     // SKILL
 
     // Get all technical skills for a Perficient employee
+    // TODO there is probably a better way to write a query in the repo
+    // that returns the skills, rather than the entire employee object
+    @GetMapping("/employees/{id}/skills")
+    public List<Skill> readAll(@PathVariable("id") String id){
+        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+        return employee.getSkills();
+    }
 
     // Find a technical skill for a Perficient employee by ID
-   /* @GetMapping("/employee/{id}")
-    public Skill readOne(@PathVariable("id") String id){
-       // return repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
-    }*/
+    @GetMapping("/employees/{id}/skills/{skillsId}")
+    public Skill readOne(@PathVariable("id") String id, @PathVariable("skillsId") String skillId){
+        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+        Skill skill = new Skill();
+        for(Skill s: employee.getSkills()){
+            String i = s.getId();
+            if(i.equals(skillId)){
+                skill = s;
+            }
+        }
+        return skill;
+    }
 
     // Add a technical skill to a Perficient employee
+    // Oopsie this should be a post, but won't work as such b/c of the way I structured the data
+    @PutMapping("/employees/{id}/skills")
+    public Skill create(@PathVariable String id, @RequestBody Skill skill){
+        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+        Skill s = new Skill();
+        s.setField(skill.getField());
+        s.setExperience(skill.getExperience());
+        s.setId(new ObjectId().toString());
+        employee.getSkills().add(s);
+        repo.save(employee);
+        return s;
+    }
 
     // Update a technical skill for a Perficient employee by ID
 
