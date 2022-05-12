@@ -107,7 +107,7 @@ public class EmployeeController {
         return employee.getSkills();
     }
 
-    // Find a technical skill for a Perficient employee by ID
+    // Find a technical skill by ID for a Perficient employee by ID
     @GetMapping("/employees/{id}/skills/{skillsId}")
     public Skill readOne(@PathVariable("id") String id, @PathVariable("skillsId") String skillId){
         Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
@@ -121,13 +121,15 @@ public class EmployeeController {
         return skill;
     }
 
-    // Add a technical skill to a Perficient employee
-    // Oopsie this should be a post, but won't work as such b/c of the way I structured the data
-    @PutMapping("/employees/{id}/skills")
+    // Add a technical skill to a Perficient employee by ID
+    // Not sure I structured the data correctly since this is more like a put
+    @PostMapping("/employees/{id}/skills")
+    @ResponseStatus(HttpStatus.CREATED)
     public Skill create(@PathVariable String id, @RequestBody Skill skill){
         Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
         Skill s = new Skill();
         s.setField(skill.getField());
+        s.getField().setId(new ObjectId().toString());
         s.setExperience(skill.getExperience());
         s.setId(new ObjectId().toString());
         employee.getSkills().add(s);
@@ -135,9 +137,35 @@ public class EmployeeController {
         return s;
     }
 
-    // Update a technical skill for a Perficient employee by ID
+    // Update a technical skill by ID for a Perficient employee by ID
+    @PutMapping("employees/{id}/skills/{skillId}")
+    public Skill Update(@PathVariable("id") String id, @PathVariable("skillId") String skillId, @RequestBody Skill skill){
+        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+        Skill skl = new Skill();
+        for(Skill s: employee.getSkills()){
+            if(s.getId().equals(skillId)){
+                s.setId(skillId);
+                s.setField(skill.getField());
+                s.setExperience(skill.getExperience());
+            }
+        }
+        repo.save(employee);
+        return skl;
+    }
 
     // Delete a technical skill for a Perficient employee by ID
+    @DeleteMapping("employees/{id}/skills/{skillId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable("id") String id, @PathVariable("skillId") String skillId){
+        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+        for(int i = 0; i < employee.getSkills().size(); i++){
+            if(employee.getSkills().get(i).getId().equals(skillId)){
+                employee.getSkills().remove(employee.getSkills().get(i));
+            }
+        }
+        repo.save(employee);
+    }
+
 
 
 }
