@@ -69,6 +69,10 @@ public class EmployeeController {
     }
 
     // Update a Perficient Employee by ID
+    @PutMapping("/employee")
+    public Employee update(@RequestBody Employee employee){
+        return repo.save(employee);
+    }
 
     // Delete a Perficient employee by ID
     @DeleteMapping("/employee/{id}")
