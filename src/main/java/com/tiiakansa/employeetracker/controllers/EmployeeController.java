@@ -43,39 +43,46 @@ public class EmployeeController {
         return "Data reset.";
     }
 
+    // EMPLOYEE
+
     // Get all Perficient employees
-    @GetMapping("/employee")
+    @GetMapping("/employees")
     public List<Employee> readAll(){
         return repo.findAll();
     }
 
     // Find a Perficient employee by ID
-    @GetMapping("/employee/{id}")
+    @GetMapping("/employees/{id}")
     public Employee readOne(@PathVariable("id") String id){
         return repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
     }
 
     // Create a Perficient employee
-    @PostMapping("/employee")
+    @PostMapping("/employees")
     @ResponseStatus(HttpStatus.CREATED)
     public Employee create(@RequestBody Employee employee){
-        // need to manually add in IDs for the skills
+        // need to manually add in IDs for the nested objects
         // TODO is there a better way to accomplish this?
+        // Also, what if the Role is not one of the items in the ENUM
+        Address address = employee.getAddress();
+        address.setId(new ObjectId().toString());
         for (Skill skill: employee.getSkills()) {
             skill.setId(new ObjectId().toString());
+            Field field = skill.getField();
+            field.setId(new ObjectId().toString());
         }
         repo.insert(employee);
         return employee;
     }
 
     // Update a Perficient Employee by ID
-    @PutMapping("/employee")
+    @PutMapping("/employees")
     public Employee update(@RequestBody Employee employee){
         return repo.save(employee);
     }
 
     // Delete a Perficient employee by ID
-    @DeleteMapping("/employee/{id}")
+    @DeleteMapping("/employees/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id){
         // TODO what if ID doesn't exist - test this
@@ -88,4 +95,22 @@ public class EmployeeController {
     String employeeNotFoundHandler(EmployeeNotFoundException ex){
         return ex.getMessage();
     }
+
+    // SKILL
+
+    // Get all technical skills for a Perficient employee
+
+    // Find a technical skill for a Perficient employee by ID
+   /* @GetMapping("/employee/{id}")
+    public Skill readOne(@PathVariable("id") String id){
+       // return repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+    }*/
+
+    // Add a technical skill to a Perficient employee
+
+    // Update a technical skill for a Perficient employee by ID
+
+    // Delete a technical skill for a Perficient employee by ID
+
+
 }
