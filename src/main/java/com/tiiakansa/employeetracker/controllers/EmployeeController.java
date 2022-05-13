@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
+@CrossOrigin
 public class EmployeeController {
 
     // uses DI to make an instance of the repo available
@@ -30,14 +31,14 @@ public class EmployeeController {
                 new Skill(new Field("Java", "Software Development"), 2),
                 new Skill(new Field("Googling", "Internet"), 20)
         );
-        Employee emp = new Employee("Tiia", "Kansa", new Address("1535 Merrick", "Detroit", "MI", "48208", "US"), "tiiakansa313@gmail.com", "09/20/1973", "05/20/2022", Role.TECHNICAL_CONSULTANT, skills);
+        Employee emp = new Employee("Tiia", "Kansa", new Address("1535 Merrick", "Detroit", "MI", "48208", "US"), "tiiakansa313@gmail.com", "09/20/2010", "05/20/2022", Role.TECHNICAL_CONSULTANT, skills);
         repo.insert(emp);
 
         skills = Arrays.asList(
-                new Skill(new Field("DJing", "Entertainment"), 5),
-                new Skill(new Field("Lecturing", "Education"), 12)
+                new Skill(new Field("Aerodynamics", "Physics"), 35),
+                new Skill(new Field("Calculus", "Mathmatics"), 35)
         );
-        emp = new Employee("Susan", "Smith", new Address("1535 Woodward", "Detroit", "MI", "48210", "US"), "suzy@gmail.com", "09/20/2000", "05/20/2022", Role.CHIEF, skills);
+        emp = new Employee("Mary", "Jackson", new Address("1535 Woodward", "Hampton", "VA", "23661", "US"), "suzy@gmail.com", "09/20/2000", "05/20/2022", Role.CHIEF, skills);
         repo.insert(emp);
 
         return "Data reset.";
@@ -46,6 +47,7 @@ public class EmployeeController {
     // EMPLOYEE
 
     // Get all Perficient employees
+    @CrossOrigin
     @GetMapping("/employees")
     public List<Employee> readAll(){
         return repo.findAll();
@@ -64,6 +66,7 @@ public class EmployeeController {
         // need to manually add in IDs for the nested objects
         // TODO is there a better way to accomplish this?
         // Also, what if the Role is not one of the items in the ENUM
+        // TODO add error handling for incorrect Role
         Address address = employee.getAddress();
         address.setId(new ObjectId().toString());
         for (Skill skill: employee.getSkills()) {
@@ -82,6 +85,7 @@ public class EmployeeController {
     }
 
     // Delete a Perficient employee by ID
+    // Why when I specify the parameter as @PathVariable("id") does this not work?
     @DeleteMapping("/employees/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id){
@@ -89,6 +93,7 @@ public class EmployeeController {
         repo.deleteById(id);
     }
 
+    // TODO add similar error handling for skill not found
     @ResponseBody
     @ExceptionHandler(EmployeeNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -147,6 +152,7 @@ public class EmployeeController {
                 s.setId(skillId);
                 s.setField(skill.getField());
                 s.setExperience(skill.getExperience());
+                skl = s;
             }
         }
         repo.save(employee);
@@ -165,7 +171,4 @@ public class EmployeeController {
         }
         repo.save(employee);
     }
-
-
-
 }
