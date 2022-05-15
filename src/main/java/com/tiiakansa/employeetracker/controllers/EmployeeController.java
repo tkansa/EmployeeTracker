@@ -134,7 +134,7 @@ public class EmployeeController {
             }
         }
         if(skill == null){
-            throw new SkillNotFoundException(id);
+            throw new SkillNotFoundException(skillId);
         }
         return skill;
     }
@@ -168,7 +168,7 @@ public class EmployeeController {
             }
         }
         if(skill == null){
-            throw new SkillNotFoundException(id);
+            throw new SkillNotFoundException(skillId);
         }
         repo.save(employee);
         return skl;
@@ -187,7 +187,7 @@ public class EmployeeController {
             }
         }
         if(!hasSkill){
-            throw new SkillNotFoundException(id);
+            throw new SkillNotFoundException(skillId);
         }
         repo.save(employee);
     }
