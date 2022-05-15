@@ -43,6 +43,13 @@ public class EmployeeController {
         emp = new Employee("Mary", "Jackson", new Address("1535 Woodward", "Hampton", "VA", "23661", "US"), "mjackson@nasa.com", "09/20/2000", "05/20/2022", Role.CHIEF, skills);
         repo.insert(emp);
 
+        skills = Arrays.asList(
+                new Skill(new Field("Cryptoanalytics", "Code Breaking"), 35),
+                new Skill(new Field("Numismatics", "Code Breaking"), 35)
+        );
+        emp = new Employee("Elizabeth", "Clarke", new Address("Bletchley Park, Sherwood Dr.", "Milton Keynes", "Buckinghamshire", "MK3 6EB", "US"), "mjackson@nasa.com", "09/20/2000", "05/20/2022", Role.CHIEF, skills);
+        repo.insert(emp);
+
         return "Data reset.";
     }
 
