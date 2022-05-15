@@ -1,6 +1,7 @@
 package com.tiiakansa.employeetracker.controllers;
 
 import com.tiiakansa.employeetracker.EmployeeNotFoundException;
+import com.tiiakansa.employeetracker.SkillNotFoundException;
 import com.tiiakansa.employeetracker.models.*;
 import com.tiiakansa.employeetracker.repositories.EmployeeRepository;
 import org.bson.types.ObjectId;
@@ -86,9 +87,7 @@ public class EmployeeController {
         // But I left it in the endpoint to conform with specs
         Optional<Employee> emp = repo.findById(id);
         if(!emp.isPresent()){
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND
-            );
+            throw new EmployeeNotFoundException(id);
         }
         return repo.save(employee);
     }
@@ -100,7 +99,7 @@ public class EmployeeController {
 
         Optional<Employee> employee = repo.findById(id);
         if(!employee.isPresent()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new EmployeeNotFoundException(id);
         }
         repo.deleteById(id);
     }
@@ -135,7 +134,7 @@ public class EmployeeController {
             }
         }
         if(skill == null){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new SkillNotFoundException(id);
         }
         return skill;
     }
@@ -169,7 +168,7 @@ public class EmployeeController {
             }
         }
         if(skill == null){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new SkillNotFoundException(id);
         }
         repo.save(employee);
         return skl;
@@ -188,8 +187,15 @@ public class EmployeeController {
             }
         }
         if(!hasSkill){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new SkillNotFoundException(id);
         }
         repo.save(employee);
+    }
+
+    @ResponseBody
+    @ExceptionHandler(SkillNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    String skillNotFoundHandler(SkillNotFoundException ex){
+        return ex.getMessage();
     }
 }
