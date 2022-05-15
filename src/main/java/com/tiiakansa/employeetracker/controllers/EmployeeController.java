@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -38,7 +39,7 @@ public class EmployeeController {
                 new Skill(new Field("Aerodynamics", "Physics"), 35),
                 new Skill(new Field("Calculus", "Mathmatics"), 35)
         );
-        emp = new Employee("Mary", "Jackson", new Address("1535 Woodward", "Hampton", "VA", "23661", "US"), "suzy@gmail.com", "09/20/2000", "05/20/2022", Role.CHIEF, skills);
+        emp = new Employee("Mary", "Jackson", new Address("1535 Woodward", "Hampton", "VA", "23661", "US"), "mjackson@nasa.com", "09/20/2000", "05/20/2022", Role.CHIEF, skills);
         repo.insert(emp);
 
         return "Data reset.";
@@ -64,9 +65,8 @@ public class EmployeeController {
     @ResponseStatus(HttpStatus.CREATED)
     public Employee create(@RequestBody Employee employee){
         // need to manually add in IDs for the nested objects
-        // TODO is there a better way to accomplish this?
-        // Also, what if the Role is not one of the items in the ENUM
-        // TODO add error handling for incorrect Role
+        // is there a better way to accomplish this?
+        // TODO add 422 (Invalid data error handling)
         Address address = employee.getAddress();
         address.setId(new ObjectId().toString());
         for (Skill skill: employee.getSkills()) {
@@ -79,21 +79,32 @@ public class EmployeeController {
     }
 
     // Update a Perficient Employee by ID
-    @PutMapping("/employees")
-    public Employee update(@RequestBody Employee employee){
+    @PutMapping("/employees/{id}")
+    public Employee update(@PathVariable("id") String id, @RequestBody Employee employee){
+
+        // The built-in Spring Data MongoRepository method doesn't require an ID
+        // But I left it in the endpoint to conform with specs
+        Optional<Employee> emp = repo.findById(id);
+        if(!emp.isPresent()){
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND
+            );
+        }
         return repo.save(employee);
     }
 
     // Delete a Perficient employee by ID
-    // Why when I specify the parameter as @PathVariable("id") does this not work?
     @DeleteMapping("/employees/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id){
-        // TODO what if ID doesn't exist - test this
+
+        Optional<Employee> employee = repo.findById(id);
+        if(!employee.isPresent()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
         repo.deleteById(id);
     }
 
-    // TODO add similar error handling for skill not found
     @ResponseBody
     @ExceptionHandler(EmployeeNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -116,18 +127,20 @@ public class EmployeeController {
     @GetMapping("/employees/{id}/skills/{skillsId}")
     public Skill readOne(@PathVariable("id") String id, @PathVariable("skillsId") String skillId){
         Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
-        Skill skill = new Skill();
+        Skill skill = null;
         for(Skill s: employee.getSkills()){
             String i = s.getId();
             if(i.equals(skillId)){
                 skill = s;
             }
         }
+        if(skill == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
         return skill;
     }
 
     // Add a technical skill to a Perficient employee by ID
-    // Not sure I structured the data correctly since this is more like a put
     @PostMapping("/employees/{id}/skills")
     @ResponseStatus(HttpStatus.CREATED)
     public Skill create(@PathVariable String id, @RequestBody Skill skill){
@@ -146,7 +159,7 @@ public class EmployeeController {
     @PutMapping("employees/{id}/skills/{skillId}")
     public Skill Update(@PathVariable("id") String id, @PathVariable("skillId") String skillId, @RequestBody Skill skill){
         Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
-        Skill skl = new Skill();
+        Skill skl = null;
         for(Skill s: employee.getSkills()){
             if(s.getId().equals(skillId)){
                 s.setId(skillId);
@@ -154,6 +167,9 @@ public class EmployeeController {
                 s.setExperience(skill.getExperience());
                 skl = s;
             }
+        }
+        if(skill == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         repo.save(employee);
         return skl;
@@ -164,10 +180,15 @@ public class EmployeeController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") String id, @PathVariable("skillId") String skillId){
         Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+        boolean hasSkill = false;
         for(int i = 0; i < employee.getSkills().size(); i++){
             if(employee.getSkills().get(i).getId().equals(skillId)){
                 employee.getSkills().remove(employee.getSkills().get(i));
+                hasSkill = true;
             }
+        }
+        if(!hasSkill){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
         repo.save(employee);
     }
