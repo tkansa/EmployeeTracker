@@ -67,7 +67,7 @@ public class EmployeeController {
     // Find a Perficient employee by ID
     @GetMapping("/employees/{id}")
     public Employee readOne(@PathVariable("id") String id){
-        return repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+        return repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException("Perficient employee not found."));
     }
 
     // Create a Perficient employee
@@ -99,7 +99,7 @@ public class EmployeeController {
         // But I left it in the endpoint to conform with specs
         Optional<Employee> emp = repo.findById(id);
         if(!emp.isPresent()){
-            throw new EmployeeNotFoundException(id);
+            throw new EmployeeNotFoundException("Perficient employee not found.");
         }
         return repo.save(employee);
     }
@@ -111,7 +111,7 @@ public class EmployeeController {
 
         Optional<Employee> employee = repo.findById(id);
         if(!employee.isPresent()){
-            throw new EmployeeNotFoundException(id);
+            throw new EmployeeNotFoundException("Perficient employee not found.");
         }
         repo.deleteById(id);
     }
@@ -137,7 +137,8 @@ public class EmployeeController {
     // that returns the skills, rather than the entire employee object
     @GetMapping("/employees/{id}/skills")
     public List<Skill> readAll(@PathVariable("id") String id){
-        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+
+        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException("Perficient employee not found."));
         return employee.getSkills();
     }
 
@@ -153,7 +154,7 @@ public class EmployeeController {
             }
         }
         if(skill == null){
-            throw new SkillNotFoundException(skillId);
+            throw new SkillNotFoundException("Technical skill not found.");
         }
         return skill;
     }
@@ -162,21 +163,25 @@ public class EmployeeController {
     @PostMapping("/employees/{id}/skills")
     @ResponseStatus(HttpStatus.CREATED)
     public Skill create(@PathVariable String id, @RequestBody Skill skill){
-        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException("Perficient employee not found"));
         Skill s = new Skill();
-        s.setField(skill.getField());
-        s.getField().setId(new ObjectId().toString());
-        s.setExperience(skill.getExperience());
-        s.setId(new ObjectId().toString());
-        employee.getSkills().add(s);
-        repo.save(employee);
+        try {
+            s.setField(skill.getField());
+            s.getField().setId(new ObjectId().toString());
+            s.setExperience(skill.getExperience());
+            s.setId(new ObjectId().toString());
+            employee.getSkills().add(s);
+            repo.save(employee);
+        } catch(Exception e){
+            throw new InvalidDataException("Invalid technical skill data sent to server.");
+        }
         return s;
     }
 
     // Update a technical skill by ID for a Perficient employee by ID
     @PutMapping("employees/{id}/skills/{skillId}")
     public Skill Update(@PathVariable("id") String id, @PathVariable("skillId") String skillId, @RequestBody Skill skill){
-        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException(id));
+        Employee employee = repo.findById(id).orElseThrow(() -> new EmployeeNotFoundException("Perficient employee not found."));
         Skill skl = null;
         for(Skill s: employee.getSkills()){
             if(s.getId().equals(skillId)){
@@ -187,7 +192,7 @@ public class EmployeeController {
             }
         }
         if(skill == null){
-            throw new SkillNotFoundException(skillId);
+            throw new SkillNotFoundException("Technical skill not found.");
         }
         repo.save(employee);
         return skl;
