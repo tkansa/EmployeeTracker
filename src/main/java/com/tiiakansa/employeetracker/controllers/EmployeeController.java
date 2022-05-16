@@ -1,6 +1,7 @@
 package com.tiiakansa.employeetracker.controllers;
 
 import com.tiiakansa.employeetracker.EmployeeNotFoundException;
+import com.tiiakansa.employeetracker.InvalidDataException;
 import com.tiiakansa.employeetracker.SkillNotFoundException;
 import com.tiiakansa.employeetracker.models.*;
 import com.tiiakansa.employeetracker.repositories.EmployeeRepository;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.StandardReflectionParameterNameDiscoverer;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
@@ -74,15 +76,18 @@ public class EmployeeController {
     public Employee create(@RequestBody Employee employee){
         // need to manually add in IDs for the nested objects
         // is there a better way to accomplish this?
-        // TODO add 422 (Invalid data error handling)
-        Address address = employee.getAddress();
-        address.setId(new ObjectId().toString());
-        for (Skill skill: employee.getSkills()) {
-            skill.setId(new ObjectId().toString());
-            Field field = skill.getField();
-            field.setId(new ObjectId().toString());
+        try{
+            Address address = employee.getAddress();
+            address.setId(new ObjectId().toString());
+            for (Skill skill : employee.getSkills()) {
+                skill.setId(new ObjectId().toString());
+                Field field = skill.getField();
+                field.setId(new ObjectId().toString());
+            }
+            repo.insert(employee);
+        } catch (Exception e){
+            throw new InvalidDataException("Invalid Perficient employee data sent to server.");
         }
-        repo.insert(employee);
         return employee;
     }
 
@@ -115,6 +120,13 @@ public class EmployeeController {
     @ExceptionHandler(EmployeeNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     String employeeNotFoundHandler(EmployeeNotFoundException ex){
+        return ex.getMessage();
+    }
+
+    @ResponseBody
+    @ExceptionHandler(InvalidDataException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    String invalidDataHandler(InvalidDataException ex){
         return ex.getMessage();
     }
 
